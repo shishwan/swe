@@ -20,6 +20,7 @@ pipeline {
                         sh 'mvn clean install'
                     }
                 }
+                echo 'Building the Docker Image ...'
                 sh "docker login -u ajagadis -p ${DOCKERHUB_PASS}"
                 sh 'docker build -t 645_survey .'
                 sh 'docker push 645_survey'
