@@ -23,6 +23,8 @@ pipeline {
                      echo 'Building the  ...'
                     docker.image('maven:3.8.4').inside('-u root') {
                         // Install Maven in the container
+
+                        echo 'Building the '
                         sh 'apt-get update && apt-get install -y maven'
 
                         // Build the Maven project
