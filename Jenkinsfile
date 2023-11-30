@@ -12,21 +12,23 @@ pipeline {
                 checkout scm
             }
         }
-        stage('Build and Push Docker Image') {
+        stage('BuildJAR') {
             steps {
-                echo 'Building the Docker Image ...'
-                script {
-                    docker.image('maven:3.8.4').inside('-u root') {
-                        sh 'mvn clean install'
-                    }
-                }
-                echo 'Building the Docker Image ...'
-                sh "docker login -u ajagadis -p ${DOCKERHUB_PASS}"
-                sh 'docker build -t 645_survey .'
-                sh 'docker push 645_survey'
+                echo 'Building the JAR ...'
+                sh 'java -version'
+                sh 'mvn clean install'  // Assuming Maven is used to build the JAR file
+                sh 'docker login -u ajagadis -p ${DOCKERHUB_PASS}'
+                sh 'docker build -t ajagadis/645_survey .'
             }
         }
-        stage("Update Deployment") {
+        stage("Pushing image to docker") {
+            steps {
+                script {
+                    sh 'docker push ajagadis/645_survey'
+                }
+            }
+        }
+        stage("UpdateDeployment") {
             steps {
                 sh 'kubectl rollout restart deploy deploy'
             }
