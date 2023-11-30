@@ -1,33 +1,46 @@
 pipeline {
     agent any
     environment {
-        PROJECT_ID = 'rancher'
-        CLUSTER_NAME = 'rancher'
-        LOCATION = 'us-east-1a'
+        LOCATION = 'us-east-1c'
         DOCKERHUB_PASS = 'AJ@gmu-2024'
     }
+
     stages {
         stage("Checkout code") {
             steps {
                 checkout scm
             }
         }
-        stage('Build and Push Docker Image') {
+        stage("Building the Student Survey Image") {
             steps {
-                echo 'Building the Docker Image ...'
                 script {
-                    docker.image('maven:3.8.4').inside('-u root') {
-                        sh 'mvn clean install'
-                    }
+                    echo 'Creating the Jar..'
+                    sh 'rm -rf *.jar'
+                    sh 'mvn clean package'
                 }
-                sh 'docker login -u ajagadis -p ${DOCKERHUB_PASS}'
-                sh 'docker build -t 645_survey .'
-                sh 'docker push 645_survey'
             }
         }
-        stage("Update Deployment") {
+        stage("Docker image building"){
+            steps{
+                script{
+                    sh 'echo ${BUILD_TIMESTAMP}'
+                    sh 'echo $DOCKERHUB_PASS | docker login -u ajagadis --password-stdin'
+                    sh 'docker build -t ajagadis/645_survey .'
+                }
+            }
+        }
+        stage("Pushing image to docker") {
             steps {
-                sh 'kubectl rollout restart deploy deploy'
+                script {
+                    sh 'docker push ajagadis/645_survey:new'
+                }
+            }
+        }
+        stage("Deploying to rancher") {
+            steps {
+                script {
+                    sh 'kubectl rollout restart deploy swe-backend'
+                }
             }
         }
     }
